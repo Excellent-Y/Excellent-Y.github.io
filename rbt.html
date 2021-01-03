@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <link rel="stylesheet" href="css/reset.css" />
+  <link rel="stylesheet" href="css/main.css" />
+  <script type="text/javascript" src="js/jquery-1.12.4.min.js"></script>
+  <script type="text/javascript" src="js/jquery-ui.min.js"></script>
+  <script type="text/javascript" src="js/jquery.mousewheel.js"></script>
+  <title>聊天机器人</title>
+
+  <style>
+    .icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="wrap">
+    <div class="header">
+      <h3>初音未来</h3>
+      <img src="img/cywl.jfif" alt="icon" class="icon" />
+    </div>
+
+    <div class="main">
+      <!-- 聊天区域 -->
+      <ul class="talk_list" style="top: 0px;">
+
+
+
+      </ul>
+
+      <!-- 滚动条部分 -->
+      <div class="drag_bar" style="display: none;">
+        <div class="drager ui-draggable ui-draggable-handle" style="display: none; height: 412.628px;"></div>
+      </div>
+    </div>
+
+    <!-- 聊天区域 -->
+    <div class="footer">
+      <img src="img/person02.png" alt="icon" class="icon" />
+      <input type="text" placeholder="说的什么吧..." class="input_txt" />
+      <input type="button" value="发 送" class="input_sub" />
+    </div>
+  </div>
+
+  <script type="text/html" id="tmp">
+    {{ each }}
+    {{ if $value.type == 0 }}
+  <!-- 左侧机器人聊的 -->
+  <li class="left_word">
+    <img src="img/cywl.jfif" class="icon" /> <span>{{ $value.txt }}</span>
+  </li>
+    {{ else }}
+  <!-- 右边自己聊的 -->
+  <li class="right_word">
+    <img src="img/person02.png" class="icon" /> <span>{{ $value.txt }}</span>
+  </li>
+    {{ /if }}
+    {{ /each }}
+  </script>
+
+
+
+
+
+  <script type="text/javascript" src="js/scroll.js"></script>
+  <script src="./js/template-web.js"></script>
+  <script>
+    $(function () {
+      // 初始化右侧滚动条,调用它能够让滚动条滚到最后
+      resetui()
+
+      // 定义数组保存所有的聊天记录
+      let txtList = []
+
+      // 给 发送 添加点击事件
+      $('.input_sub').click(function () {
+
+        // 获取输入框内容
+        let txt = $('.input_txt').val().trim()
+
+        // 判断输入框内容是否为空
+        if (txt == '') {
+          return alert('说的什么')
+        }
+
+        // 把自己输入的内容添加到数组记录中
+        txtList.push({
+          txt: txt,
+          type: 1
+        })
+
+        // 把 自己的输入 先添加到模板中
+        let html = template('tmp', txtList)
+        $('.talk_list').html(html)
+
+        // 发送请求
+        $.get({
+          url: 'http://api.tianapi.com/txapi/tuling/index',
+          dataType: 'json',
+          data: {
+            key: '8b0bebd427e389cef8fcb2443d4e85e5',
+            question: txt,
+            user:'猪'
+          },
+          success: function (res) {
+            console.log(res);
+            // 把机器人的消息加到数组
+            txtList.push({
+              txt: res.newslist[0].reply,
+              type: 0
+            })
+            // 把机器人的内容加到模板中
+            let html = template('tmp', txtList)
+            $('.talk_list').html(html)
+
+          }
+        })
+        // 清空输入框
+        $('.input_txt').val('')
+      })
+
+      $('.input_txt').keyup(function (e) {
+        if (e.keyCode == 13) {
+          $('.input_sub').trigger('click')
+        }
+      })
+    })
+  </script>
+
+</body>
+
+</html>
